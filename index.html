@@ -728,120 +728,126 @@
 
         let marker = null;
 
-        map.on('click', function(e) {
-            triggerLocationAnalysis(e.latlng.lat, e.latlng.lng);
-        });
+       Map.on('click', function(e) {
+    triggerLocationAnalysis(e.latlng.lat, e.latlng.lng);
+});
 
-        async function triggerLocationAnalysis(lat, lon) {
-            document.getElementById('coords').innerText = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-            document.getElementById('soil-page-coords').innerText = `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`;
-           
-            const latLngObj = [lat, lon];
-            if (marker) { marker.setLatLng(latLngObj); } else { marker = L.marker(latLngObj).addTo(map); }
-            map.setView(latLngObj, 14);
+async function triggerLocationAnalysis(lat, lon) {
+    document.getElementById('coords').innerText = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    document.getElementById('soil-page-coords').innerText = `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`;
+  
+    const latLngObj = [lat, lon];
+    if (marker) { marker.setLatLng(latLngObj); } else { marker = L.marker(latLngObj).addTo(map); }
+    map.setView(latLngObj, 14);
 
-            document.getElementById('soil-type').innerHTML = '<span style="color:#f59e0b">جاري الجلب الحقيقي...</span>';
-            document.getElementById('weather-temp').innerText = '...';
+    document.getElementById('soil-type').innerHTML = '<span style="color:#f59e0b">جاري جلب البيانات الحقيقية...</span>';
+    document.getElementById('weather-temp').innerText = '...';
 
-            let phVal = null;
-            let clayVal = null;
-            let temp = 'غير متوفر';
+    let phVal = null;
+    let clayVal = null;
+    let temp = 'غير متوفر';
 
-            try {
-                const soilPromise = fetch(`https://rest.isric.org/soilgrids/v2.0/properties/query?lat=${lat}&lon=${lon}&property=phh2o&property=clay&depth=0-5cm&value=mean`).then(res => res.json()).catch(() => null);
-                const weatherPromise = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`).then(res => res.json()).catch(() => null);
+    try {
+        const soilPromise = fetch(`https://rest.isric.org/soilgrids/v2.0/properties/query?lat=${lat}&lon=${lon}&property=phh2o&property=clay&depth=0-5cm&value=mean`).then(res => res.json());
+        const weatherPromise = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`).then(res => res.json());
 
-                const [soilData, weatherData] = await Promise.all([soilPromise, weatherPromise]);
-               
-                if (soilData && soilData.properties && soilData.properties.layers) {
-                    const layers = soilData.properties.layers;
-                    phVal = layers.find(l => l.name === 'phh2o')?.depths[0].values.mean / 10;
-                    clayVal = layers.find(l => l.name === 'clay')?.depths[0].values.mean / 10;
-                }
+        const [soilData, weatherData] = await Promise.all([soilPromise, weatherPromise]);
+      
+        if (soilData && soilData.properties && soilData.properties.layers) {
+            const layers = soilData.properties.layers;
+            const phLayer = layers.find(l => l.name === 'phh2o');
+            const clayLayer = layers.find(l => l.name === 'clay');
 
-                if (weatherData && weatherData.current_weather) {
-                    temp = `${weatherData.current_weather.temperature}°C`;
-                }
-            } catch (err) {
-                console.log("استخدام التقدير الجغرافي الذكي للإحداثيات");
+            if (phLayer && phLayer.depths && phLayer.depths[0].values.mean) {
+                phVal = phLayer.depths[0].values.mean / 10;
             }
-
-            if (phVal === null || isNaN(phVal)) {
-
-
-                phVal = parseFloat((6.2 + Math.abs((lat * lon) % 2.1)).toFixed(2));
+            if (clayLayer && clayLayer.depths && clayLayer.depths[0].values.mean) {
+                clayVal = clayLayer.depths[0].values.mean / 10;
             }
-            if (clayVal === null || isNaN(clayVal)) {
-                clayVal = parseFloat(((Math.abs(lat * 3) + Math.abs(lon * 2)) % 55).toFixed(1));
-            }
-            let soilText = "تربة طميية متوازنة (Loam)";
-            let goldText = "مرتفع نسبياً (تكوينات حصوية)";
-            let feText = "متوسط";
-            let floorsText = "4 - 6 طوابق";
-            let constText = "أساسات عادية مستقرة";
-            let cropText1 = "القمح والذرة";
-            let cropText2 = "الحمضيات";
-            let cropText3 = "الخضروات";
-            let bearingText = "140 - 200 كيلو باسكال";
-            let warningText = "التربة مستقرة هندسياً وممتازة لمشاريع البناء المعتادة.";
-
-            if (clayVal > 38) {
-                soilText = "تربة طينية (Clayey)";
-                goldText = "متوسط (صخور طينية متحولة)";
-                feText = "مرتفع";
-                floorsText = "2 - 3 طوابق";
-                constText = "أساسات حشوية (Piles)";
-                bearingText = "110 - 150 كيلو باسكال";
-                warningText = "قد تتطلب أساسات عميقة أو إحلال التربة، وقد تحد من عدد الطوابق إن لم تعالج.";
-                cropText1 = "القمح والأرز";
-                cropText2 = "القطن";
-                cropText3 = "الحبوب";
-            } else if (clayVal < 16) {
-                soilText = "تربة رملية / صخرية (Sandy)";
-                goldText = "مرتفع جداً (عروق كوارتز محتملة)";
-                feText = "منخفض إلى متوسط";
-                floorsText = "3 - 5 طوابق";
-                constText = "أساسات سطحية مع دكّ مكثف";
-                bearingText = "160 - 220 كيلو باسكال";
-                warningText = "تحتاج لعملية دك مكثف لزيادة قدرة التحمل وتجنب الهبوط.";
-                cropText1 = "النخيل";
-                cropText2 = "الفول السوداني";
-                cropText3 = "الحمضيات";
-            }
-
-            const phText = phVal.toFixed(2);
-
-            document.getElementById('weather-temp').innerText = temp;
-            document.getElementById('soil-ph').innerText = phText;
-            document.getElementById('soil-type').innerText = soilText;
-            document.getElementById('mineral-gold').innerText = goldText;
-            document.getElementById('mineral-fe').innerText = feText;
-            document.getElementById('construct-floors').innerText = floorsText;
-            document.getElementById('construct-suit').innerText = constText;
-            document.getElementById('crop-suit').innerText = `${cropText1}، ${cropText2}`;
-
-            document.getElementById('page-soil-type').innerText = soilText;
-            document.getElementById('page-soil-ph').innerText = phText;
-            document.getElementById('page-soil-nutrients').innerText = clayVal > 38 ? "عالية" : "متوسطة";
-            document.getElementById('page-soil-moisture').innerText = clayVal > 38 ? "عالي" : "معتدل";
-
-            document.getElementById('page-mineral-gold').innerText = goldText;
-            document.getElementById('page-mineral-fe').innerText = feText;
-            document.getElementById('page-mineral-quartz').innerText = clayVal < 16 ? "مرتفع جداً" : "متوازن";
-            document.getElementById('page-mineral-prob').innerText = clayVal > 38 ? "تكوينات صخرية طينية" : "عروق رملية وحصوية";
-
-            document.getElementById('const-page-soil').innerText = soilText;
-            document.getElementById('const-page-warning').innerText = warningText;
-            document.getElementById('const-bearing').innerText = bearingText;
-            document.getElementById('const-page-floors').innerText = floorsText;
-            document.getElementById('const-page-suit').innerText = constText;
-
-            document.getElementById('agri-page-soil').innerText = soilText;
-            document.getElementById('crop-1').innerText = cropText1;
-            document.getElementById('crop-2').innerText = cropText2;
-            document.getElementById('crop-3').innerText = cropText3;
-            document.getElementById('agri-ph').innerText = phText;
         }
-    </script>
+
+        if (weatherData && weatherData.current_weather) {
+            temp = `${weatherData.current_weather.temperature}°C`;
+        }
+    } catch (err) {
+        console.error("خطأ في الاتصال بالشبكة:", err);
+    }
+
+    // التحقق من توفر البيانات الحقيقية
+    if (phVal === null || clayVal === null) {
+        document.getElementById('soil-type').innerText = "تعذر جلب البيانات الحقيقية، تحقق من الاتصال";
+        document.getElementById('weather-temp').innerText = temp;
+        return;
+    }
+
+    let soilText = "تربة طميية متوازنة (Loam)";
+    let goldText = "مرتفع نسبياً (تكوينات حصوية)";
+    let feText = "متوسط";
+    let floorsText = "4 - 6 طوابق";
+    let constText = "أساسات عادية مستقرة";
+    let cropText1 = "القمح والذرة";
+    let cropText2 = "الحمضيات";
+    let cropText3 = "الخضروات";
+    let bearingText = "140 - 200 كيلو باسكال";
+    let warningText = "التربة مستقرة هندسياً وممتازة لمشاريع البناء المعتادة.";
+
+    if (clayVal > 38) {
+        soilText = "تربة طينية (Clayey)";
+        goldText = "متوسط (صخور طينية متحولة)";
+        feText = "مرتفع";
+        floorsText = "2 - 3 طوابق";
+        constText = "أساسات حشوية (Piles)";
+        bearingText = "110 - 150 كيلو باسكال";
+        warningText = "قد تتطلب أساسات عميقة أو إحلال التربة، وقد تحد من عدد الطوابق إن لم تعالج.";
+        cropText1 = "القمح والأرز";
+        cropText2 = "القطن";
+        cropText3 = "الحبوب";
+    } else if (clayVal < 16) {
+        soilText = "تربة رملية / صخرية (Sandy)";
+        goldText = "مرتفع جداً (عروق كوارتز محتملة)";
+        feText = "منخفض إلى متوسط";
+        floorsText = "3 - 5 طوابق";
+        constText = "أساسات سطحية مع دكّ مكثف";
+        bearingText = "160 - 220 كيلو باسكال";
+        warningText = "تحتاج لعملية دك مكثف لزيادة قدرة التحمل وتجنب الهبوط.";
+        cropText1 = "النخيل";
+        cropText2 = "الفول السوداني";
+        cropText3 = "الحمضيات";
+    }
+
+    const phText = phVal.toFixed(2);
+
+    document.getElementById('weather-temp').innerText = temp;
+    document.getElementById('soil-ph').innerText = phText;
+    document.getElementById('soil-type').innerText = soilText;
+    document.getElementById('mineral-gold').innerText = goldText;
+    document.getElementById('mineral-fe').innerText = feText;
+    document.getElementById('construct-floors').innerText = floorsText;
+    document.getElementById('construct-suit').innerText = constText;
+    document.getElementById('crop-suit').innerText = `${cropText1}، ${cropText2}`;
+
+    document.getElementById('page-soil-type').innerText = soilText;
+    document.getElementById('page-soil-ph').innerText = phText;
+    document.getElementById('page-soil-nutrients').innerText = clayVal > 38 ? "عالية" : "متوسطة";
+    document.getElementById('page-soil-moisture').innerText = clayVal > 38 ? "عالي" : "معتدل";
+
+    document.getElementById('page-mineral-gold').innerText = goldText;
+    document.getElementById('page-mineral-fe').innerText = feText;
+    document.getElementById('page-mineral-quartz').innerText = clayVal < 16 ? "مرتفع جداً" : "متوازن";
+    document.getElementById('page-mineral-prob').innerText = clayVal > 38 ? "تكوينات صخرية طينية" : "عروق رملية وحصوية";
+
+    document.getElementById('const-page-soil').innerText = soilText;
+    document.getElementById('const-page-warning').innerText = warningText;
+    document.getElementById('const-bearing').innerText = bearingText;
+    document.getElementById('const-page-floors').innerText = floorsText;
+    document.getElementById('const-page-suit').innerText = constText;
+
+    document.getElementById('agri-page-soil').innerText = soilText;
+    document.getElementById('crop-1').innerText = cropText1;
+    document.getElementById('crop-2').innerText = cropText2;
+    document.getElementById('crop-3').innerText = cropText3;
+    document.getElementById('agri-ph').innerText = phText;
+}
+</script>
 </body>
 </html>
