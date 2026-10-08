@@ -653,10 +653,10 @@
     <!-- سكربت التطبيق والخرائط -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        updateUserData();
         function updateUserData() {
             let userName = localStorage.getItem('soilmap_username');
             if (!userName) {
-                W
                     window.location.href = 'login.html';
                 return;
 
