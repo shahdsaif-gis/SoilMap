@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoilMap - تسجيل الدخول</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            /* نفس خلفية الصورة الطبيعية الاحترافية */
+            background: linear-gradient(rgba(7, 13, 25, 0.7), rgba(7, 13, 25, 0.85)), url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=1600&q=80');
+            background-size: cover;
+            background-position: center;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        /* الصندوق الزجاجي الشفاف (Glassmorphism) */
+        .auth-container {
+            background: rgba(11, 19, 38, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 35px 30px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+        /* الشعار المدمج تماماً كما في الصورة */
+        .auth-logo-box {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .auth-logo-box img {
+            max-height: 110px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .auth-header h2 {
+            font-size: 1.4rem;
+            color: #f8fafc;
+            margin-bottom: 6px;
+        }
+        .auth-header p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        /* حقول الإدخال مع الأيقونات */
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .input-group span {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            color: #94a3b8;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 45px 14px 45px;
+            background: rgba(7, 13, 25, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 30px;
+            color: #f8fafc;
+            outline: none;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        .input-group input:focus {
+            border-color: #10b981;
+            background: rgba(7, 13, 25, 0.8);
+        }
+        .input-group input::placeholder {
+            color: #64748b;
+        }
+        /* خيارات إضافية (تذكرني / نسيت كلمة المرور) */
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            color: #94a3b8;
+            padding: 0 5px;
+        }
+        .options-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .options-row input[type="checkbox"] {
+            accent-color: #10b981;
+            width: 15px;
+            height: 15px;
+        }
+        .options-row a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .options-row a:hover {
+            text-decoration: underline;
+        }
+        /* الأزرار الخضراء البارزة */
+        .main-btn {
+            width: 100%;
+            padding: 14px;
+            background: #10b981;
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .main-btn:hover {
+            background: #059669;
+        }
+        /* فاصل "أو" */
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .divider::before { right: 0; }
+        .divider::after { left: 0; }
+        
+        /* زر متابعة عبر Google */
+        .google-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(7, 13, 25, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 30px;
+            color: #f8fafc;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 20px;
+        }
+        .google-btn:hover {
+            background: rgba(7, 13, 25, 0.9);
+        }
+        /* التبديل بين صفحة الدخول والإنشاء */
+        .switch-box {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .switch-box span {
+            color: #10b981;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .switch-box span:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <!-- الشعار المدمج مع العنوان والوصف -->
+        <div class="auth-logo-box">
+            <img src="logo.png" alt="SoilMap Logo">
+            <div class="brand-subtitle">Know Your Soil &bull; Build Better</div>
+        </div>
+
+        <!-- نموذج تسجيل الدخول -->
+        <div id="login-view">
+            <div class="auth-header">
+                <h2>مرحباً بعودتك</h2>
+                <p>سجل دخولك للوصول إلى خريطة التربة وتحليلها</p>
+            </div>
+            
+            <div class="input-group">
+                <span>👤</span>
+                <input type="text" id="login-user" placeholder="البريد الإلكتروني أو اسم المستخدم">
+            </div>
+            <div class="input-group">
+                <span>🔒</span>
+                <input type="password" id="login-pass" placeholder="كلمة المرور">
+            </div>
+
+            <div class="options-row">
+                <label><input type="checkbox"> تذكرني</label>
+                <a href="#">نسيت كلمة المرور؟</a>
+            </div>
+
+            <button class="main-btn" onclick="handleLogin()">تسجيل الدخول &larr;</button>
+
+            <div class="divider">أو</div>
+
+            <button class="google-btn" onclick="handleGoogleLogin()">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.95H1.14v3.15C3.16 21.32 7.22 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.25c-.25-.72-.38-1.49-.38-2.25s.13-1.53.38-2.25V6.6H1.14C.41 8.08 0 9.74 0 12s.41 3.92 1.14 5.4l4.14-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.16 2.68 1.14 6.6l4.14 3.15c.95-2.84 3.6-4.95 6.72-4.95z"/></svg>
+                متابعة عبر Google
+            </button>
+
+            <div class="switch-box">
+                ليس لديك حساب؟ <span onclick="switchView('register')">أنشئ حساباً جديداً</span>
+            </div>
+        </div>
+
+        <!-- نموذج إنشاء حساب جديد -->
+        <div id="register-view" style="display: none;">
+            <div class="auth-header">
+                <h2>إنشاء حساب جديد</h2>
+                <p>انضم إلينا واستكشف إمكانيات التربة</p>
+            </div>
+            
+            <div class="input-group">
+                <span>👤</span>
+                <input type="text" id="reg-user" placeholder="الاسم الكامل">
+            </div>
+            <div class="input-group">
+                <span>✉️</span>
+                <input type="email" id="reg-email" placeholder="البريد الإلكتروني">
+            </div>
+            <div class="input-group">
+                <span>📞</span>
+                <input type="text" id="reg-phone" placeholder="رقم الهاتف (اختياري)">
+            </div>
+            <div class="input-group">
+                <span>🔒</span>
+                <input type="password" id="reg-pass" placeholder="كلمة المرور">
+            </div>
+            <div class="input-group">
+                <span>🔒</span>
+                <input type="password" id="reg-pass-confirm" placeholder="تأكيد كلمة المرور">
+            </div>
+
+            <div class="options-row" style="margin-bottom: 15px;">
+                <label><input type="checkbox" id="terms-check"> أوافق على الشروط والأحكام وسياسة الخصوصية</label>
+            </div>
+
+            <button class="main-btn" onclick="handleRegister()">إنشاء الحساب</button>
+
+            <div class="switch-box" style="margin-top: 20px;">
+                لديك حساب بالفعل؟ <span onclick="switchView('login')">تسجيل الدخول</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchView(view) {
+            const loginView = document.getElementById('login-view');
+            const regView = document.getElementById('register-view');
+            if (view === 'register') {
+                loginView.style.display = 'none';
+                regView.style.display = 'block';
+            } else {
+                loginView.style.display = 'block';
+                regView.style.display = 'none';
+            }
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('login-user').value.trim();
+            if (!username) {
+                alert("الرجاء إدخال اسم المستخدم أو البريد الإلكتروني");
+                return;
+            }
+            localStorage.setItem('soilmap_username', username);
+            window.location.href = 'index.html';
+        }
+
+        function handleRegister() {
+            const username = document.getElementById('reg-user').value.trim();
+            if (!username) {
+                alert("الرجاء إدخال الاسم الكامل");
+                return;
+            }
+            localStorage.setItem('soilmap_username', username);
+            alert("تم إنشاء الحساب بنجاح!");
+            window.location.href = 'index.html';
+        }
+
+        function handleGoogleLogin() {
+            localStorage.setItem('soilmap_username', 'مستخدم Google');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
